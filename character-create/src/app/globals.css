@@ -1,40 +1,185 @@
+/* ===========================================================================
+   THE WHOLE IDEA BEHIND THIS FILE
+
+   We are pretending to be a sheet of paper.
+
+   Paper is flat. It has no depth. So this stylesheet has NO drop shadows,
+   NO gradients, and NO "lift up when you hover" effects. If you ever catch
+   yourself adding a `box-shadow` here, that's the moment the page stops
+   looking like a printed D&D character sheet and starts looking like a
+   generic website again.
+
+   Everything is built from two things only:
+     1. ink rules  (borders/lines)
+     2. paper      (flat background colors)
+   =========================================================================== */
+
+
+/* ---------------------------------------------------------------------------
+   1. TOKENS (the project's box of crayons)
+   ---------------------------------------------------------------------------
+   `:root` is just "the <html> element", but it's the highest place in the
+   document, so anything defined here is readable by every rule below.
+
+   `--ink: #1a1613;` is a CSS custom property (a variable). Later we write
+   `color: var(--ink)` instead of `color: #1a1613`.
+
+   Why bother? Because if you decide the ink should be bluer, you change ONE
+   line here instead of hunting down 60 hex codes. The old version of this
+   file had ~15 slightly-different browns scattered around precisely because
+   nobody had a box of crayons to reach for.
+--------------------------------------------------------------------------- */
+
 :root {
-  --text: #615b50;
-  --background: #f4efe4;
-  --border: #d7cfbe;
-  --accent: #a73d29;
-  --brown: #5d462a;
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --ink: #1a1613;         /* near-black brown: all borders, all headings */
+  --ink-soft: #5d564c;    /* faded ink: secondary text, descriptions */
+  --hairline: #b9ad97;    /* the thin light rules INSIDE a box */
+  --paper: #f6f1e4;       /* the sheet itself */
+  --paper-shade: #ebe3d1; /* one shade darker: the desk, table stripes */
+  --paper-deep: #e0d6bd;  /* two shades darker: hover + selected rows */
+  --accent: #7a1f16;      /* oxblood red. Used sparingly, like a red pen. */
+
+  /* Font stacks. `--font-display` etc. are NOT defined here — they are
+     injected by next/font in layout.tsx. We wrap them with a fallback so
+     text still renders if the font file hasn't downloaded yet. */
+  --display: var(--font-display), "Times New Roman", serif;  /* Cinzel */
+  --label: var(--font-label), "Trebuchet MS", sans-serif;    /* Alegreya Sans SC */
+  --body: var(--font-body), serif;                           /* EB Garamond */
+
+  /* How wide the "sheet of paper" is allowed to get on a huge monitor. */
+  --sheet: 1120px;
 }
 
-body {
-  min-height: 100svh;
-  margin: 0;
-  color: var(--text);
-  background: var(--background);
-  font: 18px/1.45 var(--sans);
-  -webkit-font-smoothing: antialiased;
-}
 
+/* ---------------------------------------------------------------------------
+   2. BASE RESET
+--------------------------------------------------------------------------- */
+
+/* `*` means "every single element". */
 * {
+  /* THE most useful line in CSS.
+     By default, if you say `width: 200px` and then add `padding: 20px`, the
+     element is actually 240px wide. Padding gets ADDED on the outside.
+     `border-box` says: "no, 200px means 200px — fit the padding inside."
+     Every layout below assumes this. */
   box-sizing: border-box;
 }
 
+body {
+  /* `svh` = "small viewport height". On phones the address bar slides away and
+     changes the screen height; `vh` jitters when that happens, `svh` doesn't. */
+  min-height: 100svh;
+
+  /* Browsers add a default ~8px margin around <body>. Kill it. */
+  margin: 0;
+
+  color: var(--ink);
+
+  /* The desk the sheet lies on — slightly darker than the sheet, so the white
+     panels below read as a separate piece of paper. */
+  background: var(--paper-shade);
+
+  /* Shorthand: font: <size>/<line-height> <family>.
+     So this is 17px text with lines spaced 1.55x apart. */
+  font: 17px/1.55 var(--body);
+
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Form controls are the one place browsers refuse to inherit your font,
+   so buttons and inputs would silently fall back to tiny system Arial.
+   This opts them back in. */
 button,
 input {
   font: inherit;
 }
 
-.site-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 18px max(24px, calc((100% - 1120px) / 2));
-  border-bottom: 1px solid var(--border);
-  background: #fffcf6;
+/* ---------------------------------------------------------------------------
+   "screen reader only" — the invisible-but-announced trick.
+   ---------------------------------------------------------------------------
+   The modifier oval visually shows just "+2". A blind user hearing "+2" with
+   no context is confused, so the markup includes a hidden " modifier" word.
+
+   We can't use `display: none` or `visibility: hidden` — those remove the text
+   from the accessibility tree too, which defeats the point. Instead we shrink
+   it to a 1px dot and clip that dot away. It's still "rendered", so screen
+   readers still read it, but no human sees it.
+--------------------------------------------------------------------------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%); /* chop away the middle 50% from every side = nothing left */
+  white-space: nowrap;
 }
 
+h1,
+h2 {
+  font-family: var(--display);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------------
+   The printed field label.
+   ---------------------------------------------------------------------------
+   Look at a real character sheet: every box has a tiny, wide-spaced, ALL CAPS
+   word next to it ("ARMOR CLASS", "PROFICIENCY BONUS"). That one typographic
+   move is what makes paper forms feel like paper forms.
+
+   Rather than repeat these 4 lines on seven different selectors, we list all
+   seven here at once. A comma in a selector means "OR" — apply to any of these.
+--------------------------------------------------------------------------- */
+.eyebrow,
+.ability-abbreviation,
+.step-card span,
+.sheet-table th,
+.stat-roll span,
+.ability-card label {
+  font-family: var(--label);
+  font-weight: 500;
+  letter-spacing: 0.16em; /* the wide airy spacing. `em` = relative to font size */
+  text-transform: uppercase;
+}
+
+
+/* ---------------------------------------------------------------------------
+   3. MASTHEAD (the title bar across the top)
+--------------------------------------------------------------------------- */
+
+.site-header {
+  /* Flexbox in one sentence: put children in a row, then decide how to
+     distribute the leftover space. */
+  display: flex;
+  align-items: baseline;          /* line up the TEXT baselines, not the boxes */
+  justify-content: space-between; /* logo shoved left, nav shoved right */
+  gap: 24px;
+
+  /* This padding is doing something clever. Read the middle value:
+       max(20px, calc((100% - var(--sheet)) / 2))
+
+     "(100% - 1120px) / 2" is the empty space on ONE side if you centered a
+     1120px block. So on a wide screen the header's contents line up exactly
+     with the sheet below it. On a narrow screen that math goes negative, so
+     `max()` clamps it to a sane 20px instead. */
+  padding: 16px max(20px, calc((100% - var(--sheet)) / 2)) 12px;
+
+  /* `double` draws two thin lines with a gap — the classic printed-form rule.
+     You cannot make a double border thinner than 3px; it needs
+     line + gap + line. */
+  border-bottom: 3px double var(--ink);
+
+  background: var(--paper);
+
+  /* Note what is NOT here: position: sticky and backdrop-filter: blur().
+     A sheet of paper doesn't have a floating frosted-glass toolbar. */
+}
+
+/* Links are blue and underlined by default. Undo that everywhere we've styled
+   a link to look like something else (a nav item, a card, a button). */
 .site-logo,
 .site-header nav a,
 .step-card,
@@ -44,287 +189,629 @@ input {
 }
 
 .site-logo {
-  flex-shrink: 0;
-  color: #3e2b18;
-  font-family: Georgia, serif;
-  font-size: 1.1rem;
+  flex-shrink: 0; /* never let flexbox squash the title to fit the nav */
+  font-family: var(--display);
+  font-size: 1.15rem;
   font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .site-header nav {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: wrap;            /* let links drop to a second line if cramped */
   justify-content: flex-end;
-  gap: 10px 20px;
+  gap: 4px 18px;              /* 4px between rows, 18px between items */
 }
 
 .site-header nav a {
-  font-size: 0.82rem;
-  font-weight: 700;
-}
+  padding-bottom: 2px;
 
-.site-header nav a:hover {
-  color: var(--accent);
-}
+  /* A transparent border, reserved now so that adding a visible one on hover
+     doesn't shove the text up by 1px. Reserving space you'll need later is
+     the standard fix for "why does my layout twitch on hover". */
+  border-bottom: 1px solid transparent;
 
-.home-page,
-.placeholder-page {
-  width: min(1120px, 100%);
-  margin: 0 auto;
-  padding: 72px 48px;
-}
-
-.home-hero {
-  max-width: 700px;
-  margin-bottom: 42px;
-}
-
-.home-hero h1,
-.placeholder-page h1 {
-  margin: 8px 0 12px;
-  color: #28231c;
-  font-family: Georgia, serif;
-  font-size: clamp(2.25rem, 6vw, 4.5rem);
-  line-height: 1.05;
-}
-
-.step-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.step-card {
-  padding: 28px;
-  border: 1px solid #ddd6c6;
-  border-radius: 10px;
-  background: #fffcf6;
-  box-shadow: 0 5px 14px rgb(68 50 23 / 6%);
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.step-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgb(68 50 23 / 12%);
-}
-
-.step-card span {
-  color: var(--accent);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-family: var(--label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
+.site-header nav a:hover {
+  border-bottom-color: var(--ink); /* the reserved 1px becomes visible */
+  color: var(--accent);
+}
+
+
+/* ---------------------------------------------------------------------------
+   4. THE SHEET PANELS
+   ---------------------------------------------------------------------------
+   Three different pages, one shared look: a bordered rectangle of paper
+   floating on the darker desk.
+--------------------------------------------------------------------------- */
+
+.home-page,
+.character-builder,
+.placeholder-page {
+  /* `min(A, B)` picks whichever is SMALLER right now.
+     Wide screen  -> 1120px wins (don't get absurdly wide).
+     Narrow screen -> 100%-32px wins (keep a 16px gutter on each side). */
+  width: min(var(--sheet), calc(100% - 32px));
+
+  /* `auto` on the left/right margins is the classic centering trick: the
+     browser splits the leftover space evenly between both sides. */
+  margin: 26px auto 52px;
+
+  padding: 32px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+
+  /* Deliberately absent: border-radius, box-shadow, background gradients. */
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.68rem;
+}
+
+.home-hero h1,
+.placeholder-page h1,
+.heading-row h1 {
+  margin: 6px 0 10px;
+
+  /* `clamp(MIN, PREFERRED, MAX)` = responsive font size with guard rails.
+     Try 4% of the viewport width, but never below 1.9rem and never above
+     2.7rem. The old file used `clamp(2.25rem, 6vw, 4.5rem)`, which produced
+     the enormous hero headline that screamed "AI landing page". */
+  font-size: clamp(1.9rem, 4vw, 2.7rem);
+
+  line-height: 1.1;
+}
+
+/* The double rule that separates a page's title block from its content. */
+.home-hero,
+.page-header,
+.placeholder-page h1 {
+  padding-bottom: 18px;
+  border-bottom: 3px double var(--ink);
+}
+
+.home-hero,
+.page-header {
+  margin-bottom: 28px;
+}
+
+.home-hero > p:last-child,
+.intro,
+.placeholder-page > p:not(.eyebrow) {
+  /* `ch` = the width of one "0" character. ~62 characters per line is the
+     readability sweet spot; much longer and the eye loses its place. */
+  max-width: 62ch;
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+/* `:not(.eyebrow)` = "every direct child <p> EXCEPT the eyebrow one",
+   so the little red label above the title keeps its own tight spacing. */
+.placeholder-page > p:not(.eyebrow) {
+  margin-top: 16px;
+}
+
+
+/* ---------------------------------------------------------------------------
+   5. HOME PAGE — the sheet's index of sections
+--------------------------------------------------------------------------- */
+
+.step-grid {
+  /* Grid vs flex: use flex for a single line of things, grid when you want
+     actual rows AND columns. */
+  display: grid;
+
+  /* `repeat(3, ...)` = three columns.
+     `minmax(0, 1fr)` = each takes an equal share of the space.
+
+     Why `minmax(0, 1fr)` instead of plain `1fr`? Because a grid column's
+     default minimum is "as wide as its widest content", so one long
+     unbreakable word can blow the whole layout out. The 0 minimum says
+     "you are allowed to be narrower than your content and wrap." */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.step-card {
+  display: block;
+
+  /* No padding on top: the header strip below supplies its own. */
+  padding: 0 18px 18px;
+
+  border: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+/* The printed header strip across the top of each boxed section.
+   This is the <span>Step 1</span> already in page.tsx — we're not adding
+   markup, just promoting an existing inline label into a full-width bar. */
+.step-card span {
+  display: block; /* was inline; now it's a block so it can span the full width */
+
+  /* NEGATIVE MARGINS. The parent has 18px of side padding, so by default this
+     strip would be inset by 18px on each side. Pulling -18px left and right
+     lets it bleed out to touch the card's border, edge to edge.
+     Then we re-add that 18px as padding so the TEXT stays lined up. */
+  margin: 0 -18px 14px;
+  padding: 7px 18px;
+
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper-shade);
+  font-size: 0.65rem;
+}
+
+/* Hover = the paper darkens and the header strip inverts to solid ink.
+   Compare to what was here before: `translate(-2px, -3px) rotate(-0.4deg)`
+   plus a growing shadow. Paper does not tilt and levitate. */
+.step-card:hover {
+  background: var(--paper-shade);
+}
+
+.step-card:hover span {
+  background: var(--ink);
+  color: var(--paper);
+}
+
 .step-card h2 {
-  margin: 10px 0 6px;
-  color: #28231c;
-  font-family: Georgia, serif;
+  margin: 0 0 6px;
+  font-size: 1.25rem;
 }
 
 .step-card p {
   margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
 }
 
-.placeholder-page {
-  max-width: 800px;
-}
 
-.placeholder-page > p:not(.eyebrow) {
-  margin-bottom: 32px;
-}
-
-.home-link {
-  display: inline-block;
-  padding: 11px 18px;
-  border: 1px solid #8f311e;
-  border-radius: 5px;
-  background: var(--accent);
-  color: white;
-  font-weight: 700;
-}
-
-.character-builder {
-  width: min(1120px, 100%);
-  margin: 0 auto;
-  padding: 64px 48px 36px;
-}
-
-.page-header {
-  margin-bottom: 40px;
-}
-
-.eyebrow,
-.ability-abbreviation,
-.modifier,
-.stat-roll span,
-.ability-card label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.eyebrow,
-.ability-abbreviation {
-  color: #b7492e;
-}
-
-.heading-row,
-.page-footer,
-.card-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+/* ---------------------------------------------------------------------------
+   6. ABILITY SCORES PAGE
+--------------------------------------------------------------------------- */
 
 .heading-row {
+  display: flex;
+  align-items: flex-end;          /* title and roll panel sit on the same floor */
+  justify-content: space-between;
   gap: 24px;
 }
 
 .heading-row h1 {
-  margin: 0 0 8px;
-}
-
-.intro {
-  margin: 0;
+  margin-bottom: 4px;
 }
 
 .roll-panel {
   display: flex;
-  flex-direction: column;
+  align-items: stretch; /* button grows to the same height as the result box */
   gap: 12px;
-  margin-left: auto;
-}
-
-.dice-roll,
-.button-primary {
-  border: 1px solid #8f311e;
-  background: var(--accent);
-  color: white;
-}
-
-.dice-roll {
-  width: 100%;
-  padding: 10px;
-  border-width: 2px;
-  border-color: var(--brown);
-  border-radius: 6px;
-  font-weight: 700;
-  cursor: pointer;
 }
 
 .stat-roll {
-  min-width: 135px;
-  padding: 14px 18px;
+  display: flex;
+
+  /* THE REVERSE TRICK.
+     The JSX is written in reading order:  <span>Stat Roll</span> then <strong>18</strong>
+     But a printed form puts the LABEL UNDER the box.
+     `column-reverse` flips the visual order without touching the markup, so
+     the number renders on top and the label underneath. */
+  flex-direction: column-reverse;
+
+  min-width: 128px;
+  padding: 10px 16px 8px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
   text-align: center;
-  border: 3px solid var(--brown);
-  border-radius: 8px;
-  background: #fff8dd;
-  box-shadow: 0 4px 0 var(--brown);
-  color: #3e2b18;
-}
-
-.stat-roll span,
-.stat-roll strong {
-  display: block;
 }
 
 .stat-roll strong {
-  font-size: 2rem;
+  font-family: var(--body);
+  font-size: 2.1rem;
+  font-weight: 400; /* <strong> defaults to bold; the size alone carries it */
   line-height: 1.1;
+}
+
+.stat-roll span {
+  /* Reads as "top" in the source, but because of column-reverse this hairline
+     appears ABOVE the label, separating it from the number. */
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--hairline);
+  font-size: 0.6rem;
 }
 
 .ability-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 22px 20px; /* 22px between rows, 20px between columns */
 }
+
+/* ===== THE ABILITY SCORE BOX — the centerpiece ==============================
+
+   This is the single most recognizable object on a D&D sheet:
+
+        +---------------------+
+        |      STRENGTH       |   <- label, ruled off
+        |---------------------|
+        |                     |
+        |         16          |   <- the score, big
+        |                     |
+        +--------( +3 )-------+   <- modifier oval, sitting ON the border
+
+   The trick is that last part: the oval is not below the box and not inside
+   the box, it straddles the bottom edge. See `.modifier` for how.
+============================================================================ */
 
 .ability-card {
-  padding: 24px;
-  border: 1px solid #ddd6c6;
+  /* `position: relative` doesn't move this box at all. It does one job:
+     it makes this element the "anchor" that any `position: absolute` child
+     measures itself against. Without it, the modifier oval would position
+     itself against the whole page instead. */
+  position: relative;
+
+  /* The oval hangs halfway below the border, so it would overlap whatever
+     comes next. This margin reserves that space. */
+  margin-bottom: 26px;
+
+  /* Extra bottom padding keeps the score number from colliding with the oval. */
+  padding: 10px 14px 30px;
+
+  border: 2px solid var(--ink);
+
+  /* The real printed box has softly rounded corners. This is the ONE place
+     in the file with a border-radius, and it's here because the source
+     material actually has it — not for decoration. */
   border-radius: 10px;
-  background: #fffcf6;
-  box-shadow: 0 5px 14px rgb(68 50 23 / 6%);
+
+  background: var(--paper);
+  text-align: center;
 }
 
-.card-topline {
-  margin-bottom: 20px;
-}
-
-.modifier {
-  color: #777164;
-  letter-spacing: 0.05em;
-}
-
-.ability-card h2 {
-  margin: 0 0 8px;
-  font-family: Georgia, serif;
-  font-size: 1.65rem;
-}
-
-.ability-card p {
-  min-height: 52px;
-  color: #716b61;
-  font-size: 0.9rem;
-}
-
+/* This is a real <label for="STR">, so clicking "Strength" focuses the input.
+   Using the ability name as the label is both correct HTML and exactly how
+   the printed sheet is laid out. */
 .ability-card label {
   display: block;
-  margin: 20px 0 7px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 0.68rem;
 }
 
+/* The score is an <input>, but we strip it back to look like handwriting on
+   the page rather than a web form field. */
 .ability-card input {
+  display: block;
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #bcb4a3;
-  border-radius: 5px;
-  background: white;
-  color: #242018;
-  font-weight: 700;
+  padding: 0;
+  border: 0;                  /* no field box — the .ability-card IS the box */
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 2.9rem;
+  line-height: 1.25;
+  text-align: center;
+
+  /* `type="number"` inputs get little up/down spinner arrows. The value here
+     is read-only (you set it by allocating a roll), so the arrows are a lie.
+     `textfield` asks the browser to render it like a plain text box... */
+  appearance: textfield;
 }
 
-.allocate-button {
-  width: 100%;
-  margin-top: 12px;
-  padding: 9px;
-  border: 1px solid var(--brown);
-  border-radius: 5px;
-  background: transparent;
-  color: var(--brown);
-  font-weight: 700;
+/* ...and this removes the arrows in Chrome/Safari, which ignore the line above.
+   `::-webkit-*` are browser-specific internal pieces you're allowed to target. */
+.ability-card input::-webkit-outer-spin-button,
+.ability-card input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+/* ===== The straddling oval ================================================
+   Four lines cooperate to pull this off:
+
+     position: absolute  -> take it out of normal flow; it no longer pushes
+                            siblings around, it just floats over the card.
+     bottom: 0; left: 50% -> put its top-left corner at the bottom-center of
+                            the card. (Not centered yet! Only the corner is.)
+     transform: translate(-50%, 50%)
+                         -> now nudge it by half of ITS OWN size:
+                            -50% horizontally = truly centered
+                            +50% vertically   = pushed down so exactly half of
+                                                it hangs below the border.
+
+   The percentages in `translate` are relative to the element itself, which is
+   why this works without knowing how wide the oval is. That's the whole trick.
+
+   The opaque `background` matters too: it paints over the card's border so
+   the line appears to stop at the oval's edges rather than run through it.
+========================================================================== */
+.modifier {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  min-width: 62px;
+  padding: 4px 0;
+  border: 2px solid var(--ink);
+  border-radius: 999px; /* any absurdly large number = "fully rounded ends" */
+  background: var(--paper);
+  font-size: 1.05rem;
+  transform: translate(-50%, 50%);
+}
+
+/* The joke descriptions live below the box, as a printed annotation would.
+   They don't belong inside the score box — a real sheet has no room for prose
+   in there. */
+.ability-note {
+  margin: 0 0 12px;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  font-style: italic;
+  text-align: center;
+}
+
+.ability-abbreviation {
+  margin-right: 6px;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-style: normal; /* opt out of the italic it would inherit from .ability-note */
+}
+
+
+/* ---------------------------------------------------------------------------
+   7. BUTTONS
+   ---------------------------------------------------------------------------
+   Rectangles with an ink rule. On hover they INVERT (ink and paper swap)
+   instead of lifting or glowing. It's the print-world equivalent of a
+   pressed state.
+--------------------------------------------------------------------------- */
+
+.allocate-button,
+.home-link,
+.dice-roll {
+  display: inline-block;
+  padding: 9px 16px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
+.allocate-button:hover,
+.home-link:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Only the six buttons in the ability grid stretch, so they line up as a row
+   of equal blocks. The same class is reused for "Start over" on the summary
+   page, where a button spanning the full 1120px sheet would look absurd. */
+.ability .allocate-button {
+  width: 100%; /* fills its grid cell so all six line up */
+}
+
+/* Disabled until you've actually rolled something. Fading the border AND the
+   text (rather than using `opacity`) keeps it crisp instead of washed out. */
 .allocate-button:disabled {
+  border-color: var(--hairline);
+  color: var(--hairline);
   cursor: not-allowed;
-  opacity: 0.5;
 }
 
-.page-footer {
-  margin-top: 42px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
+/* Without this, a disabled button would still invert on hover and look
+   clickable. `:disabled:hover` is more specific than `:hover`, so it wins. */
+.allocate-button:disabled:hover {
+  background: var(--paper);
+  color: var(--hairline);
 }
 
-.button {
-  padding: 11px 18px;
-  border-radius: 5px;
+/* The one primary action on the page gets the red pen. */
+.dice-roll {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+}
+
+.dice-roll:hover {
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.home-link {
+  margin-top: 28px;
+}
+
+
+/* ---------------------------------------------------------------------------
+   8. TABLES — the ruled ledger
+   ---------------------------------------------------------------------------
+   Shared by four tables: race, class, background, and the final summary.
+--------------------------------------------------------------------------- */
+
+.sheet-table {
+  width: 100%;
+  margin: 24px 0 16px;
+  border: 2px solid var(--ink);
+
+  /* Two options exist: `separate` (every cell keeps its own border, so
+     adjacent cells show a doubled 2px line) and `collapse` (neighbours share
+     one line). A ledger has single shared rules, so: collapse. */
+  border-collapse: collapse;
+
+  background: var(--paper);
+}
+
+.sheet-table th,
+.sheet-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.sheet-table th {
+  border-bottom: 2px solid var(--ink); /* heavier rule under the header row */
+  background: var(--paper-shade);
+  font-size: 0.64rem;
   font-weight: 700;
+
+  /* Clicking a header sorts the column. Without this, a double-click would
+     select the header text instead, which feels broken. */
+  user-select: none;
   cursor: pointer;
 }
 
-.button-secondary {
-  border: 1px solid #bcb4a3;
-  background: transparent;
-  color: #4f493e;
+.sheet-table th:hover {
+  background: var(--paper-deep);
 }
 
+/* The table already has its own 2px outer border, so the last row's own
+   bottom rule would sit right on top of it and look thick. Remove it. */
+.sheet-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Zebra striping. `:nth-child(even)` = every 2nd row. Ledgers are striped so
+   your eye can track across a wide row without slipping a line. */
+.sheet-table tbody tr:nth-child(even) {
+  background: var(--paper-shade);
+}
+
+/* ===== Telling clickable rows apart from read-only ones ====================
+   All four tables share `.sheet-table`, but only three of them let you pick a
+   row. The summary table on the last page is just a printout.
+
+   Rather than change the components to add a class, we lean on something the
+   choice tables ALREADY do: they set `aria-selected` on every row for screen
+   readers. The summary table doesn't.
+
+   `tr[aria-selected]` is an attribute selector meaning "any row that HAS this
+   attribute at all, whatever its value". So it matches the three interactive
+   tables and skips the summary. Free discriminator, zero markup changes.
+========================================================================== */
+.sheet-table tbody tr[aria-selected] {
+  cursor: pointer;
+}
+
+.sheet-table tbody tr[aria-selected]:hover {
+  background: var(--paper-deep);
+}
+
+/* `:focus-visible` (not `:focus`) shows the ring only for keyboard users, so
+   mouse clicks don't leave an outline behind. Keyboard users need it because
+   they can't see a hover state. */
+.sheet-table tbody tr:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px; /* draw it just inside the row instead of around it */
+}
+
+/* ===== Proficiency bubbles ================================================
+   On a real sheet every skill has a small circle beside it that you fill in
+   if you're proficient. That's the idiom we're borrowing for "selected".
+
+   `::before` invents a bit of content out of thin air and puts it at the very
+   start of the first cell — no HTML required. `content` is what gets drawn;
+   "\25CB" is the unicode escape for the hollow circle U+25CB (○), and
+   "\25CF" is the filled one U+25CF (●).
+
+   (You escape it rather than pasting the character so the file stays plain
+   ASCII and can't be mangled by an editor's encoding.)
+========================================================================== */
+.sheet-table tbody tr[aria-selected] td:first-child::before {
+  display: inline-block;
+  width: 1.5em; /* fixed width so every bubble lines up in a neat column */
+  color: var(--hairline);
+  content: "\25CB"; /* hollow circle */
+}
+
+/* Note `[aria-selected="true"]` — same attribute, now checking its VALUE. */
+.sheet-table tbody tr[aria-selected="true"] {
+  background: var(--paper-deep);
+  font-weight: 700;
+}
+
+.sheet-table tbody tr[aria-selected="true"] td:first-child::before {
+  color: var(--accent);
+  content: "\25CF"; /* filled circle */
+}
+
+/* Subraces (Hill Dwarf under Dwarf) get indented to show the nesting. */
+.sheet-table tbody tr.is-subrace td:first-child {
+  padding-left: 34px;
+}
+
+/* The little arrow or bullet the race table prints before a name. Fixed width
+   again, so names stay aligned whether the row has an arrow or not. */
+.row-marker {
+  display: inline-block;
+  width: 1.2em;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+/* The expand arrow is a real <button> (so keyboards can reach it), but it
+   should look like plain text, so we strip the button chrome off. */
+.row-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  line-height: 1;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* The line under each table ("Selected: Dwarf", or the summary page's note).
+   Deliberately NOT in the uppercase label group above: these range from two
+   words to a full sentence, and a long shouty sentence in tracked caps is
+   unreadable. An italic annotation handles both lengths gracefully. */
+.table-selection {
+  margin: 0 0 24px;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+
+/* ---------------------------------------------------------------------------
+   9. RESPONSIVE
+   ---------------------------------------------------------------------------
+   A media query is an "if" for screen size. `max-width: 900px` means
+   "apply these rules only when the window is 900px or narrower".
+
+   These come LAST on purpose. When two rules are equally specific, the one
+   written later wins — so putting them at the bottom guarantees they override
+   the desktop rules above rather than fighting them.
+--------------------------------------------------------------------------- */
+
+/* Tablet: three columns is too cramped, drop to two. */
+@media (max-width: 900px) {
+  .step-grid,
+  .ability-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Phone: stack everything into a single column. */
 @media (max-width: 760px) {
   .site-header {
     align-items: flex-start;
-    flex-direction: column;
+    flex-direction: column; /* logo above nav instead of beside it */
+    gap: 12px;
   }
 
   .site-header nav {
@@ -332,29 +819,27 @@ input {
   }
 
   .home-page,
+  .character-builder,
   .placeholder-page {
-    padding: 48px 20px;
-  }
-
-  .step-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .character-builder {
-    padding: 40px 20px 24px;
+    width: calc(100% - 16px);
+    margin: 12px auto 28px;
+    padding: 20px; /* claw back screen width from the generous desktop padding */
   }
 
   .heading-row {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: stretch;
+    flex-direction: column; /* roll panel drops below the title */
   }
 
-  .roll-panel {
-    width: 100%;
-    margin-left: 0;
-  }
-
+  .step-grid,
   .ability-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* `flex: 1` = "share the row equally", so the Roll button and the result
+     box each take half the width instead of hugging their content. */
+  .dice-roll,
+  .stat-roll {
+    flex: 1;
   }
 }

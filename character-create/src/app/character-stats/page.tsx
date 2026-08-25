@@ -39,7 +39,7 @@ export default function CharacterStats() {
   return (
     <main className="character-builder">
       <header className="page-header">
-        <p className="eyebrow">Character creation · Character stats</p>
+        <p className="eyebrow">Step 3 of 5</p>
         <div className="heading-row">
           <div>
             <h1>Ability Scores</h1>
@@ -62,25 +62,27 @@ export default function CharacterStats() {
           const modifier = Math.floor((scores[ability.abbreviation] - 10) / 2);
 
           return (
-            <article className="ability-card" key={ability.abbreviation}>
-              <div className="card-topline">
-                <span className="ability-abbreviation">{ability.abbreviation}</span>
+            <article className="ability" key={ability.abbreviation}>
+              <div className="ability-card">
+                <label htmlFor={ability.abbreviation}>{ability.name}</label>
+                <input
+                  id={ability.abbreviation}
+                  type="number"
+                  min="3"
+                  max="20"
+                  value={scores[ability.abbreviation]}
+                  readOnly
+                />
                 <span className="modifier">
                   {modifier >= 0 ? "+" : ""}
-                  {modifier} modifier
+                  {modifier}
+                  <span className="sr-only"> modifier</span>
                 </span>
               </div>
-              <h2>{ability.name}</h2>
-              <p>{ability.description}</p>
-              <label htmlFor={ability.abbreviation}>Score</label>
-              <input
-                id={ability.abbreviation}
-                type="number"
-                min="3"
-                max="20"
-                value={scores[ability.abbreviation]}
-                readOnly
-              />
+              <p className="ability-note">
+                <span className="ability-abbreviation">{ability.abbreviation}</span>
+                {ability.description}
+              </p>
               <button
                 className="allocate-button"
                 type="button"

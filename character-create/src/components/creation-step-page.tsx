@@ -10,7 +10,7 @@ type CreationStepPageProps = {
 export function CreationStepPage({ step, title, description, children }: CreationStepPageProps) {
   return (
     <main className="placeholder-page">
-      <p className="eyebrow">Character creation · Step {step} of 5</p>
+      <p className="eyebrow">Step {step} of 5</p>
       <h1>{title}</h1>
       <p>{description}</p>
       {children}
