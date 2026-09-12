@@ -15,8 +15,12 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return app metadata', () => {
+      expect(appController.getInfo()).toEqual({
+        name: 'dnd-proj-backend',
+        status: 'ok',
+        docs: 'Add your API docs route here (e.g. /api/docs).',
+      });
     });
   });
 });

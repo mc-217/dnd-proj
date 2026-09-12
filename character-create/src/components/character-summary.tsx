@@ -2,10 +2,60 @@
 // A Client Component because context can only be read on the client.
 "use client";
 
+import { useState } from "react";
 import { useCharacter } from "@/components/character-provider";
 
 export function CharacterSummary() {
   const { character, resetCharacter } = useCharacter();
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  // Keep save disabled until the minimum backend-required fields are chosen.
+  const canSave = Boolean(character.race && character.characterClass);
+  // Allow local override while defaulting to the backend dev URL.
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
+
+  async function saveCharacter() {
+    if (!character.race || !character.characterClass) {
+      setSaveState("error");
+      setSaveMessage("Pick both a race and class before saving.");
+      return;
+    }
+
+    setSaveState("saving");
+    setSaveMessage(null);
+
+    try {
+      // Persist through the backend so Supabase credentials stay server-side.
+      const response = await fetch(`${apiBaseUrl}/characters`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // Temporary generated name until a dedicated name input is added.
+          name: `${character.race} ${character.characterClass} Adventurer`,
+          race: character.race,
+          // Backend expects lowercase class values (e.g. "wizard").
+          class: character.characterClass.toLowerCase(),
+          background: character.background ?? undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const details = await response.text();
+        throw new Error(details || `Request failed with status ${response.status}`);
+      }
+
+      const saved = (await response.json()) as { id?: string };
+      setSaveState("success");
+      setSaveMessage(
+        saved.id ? `Saved to backend (id: ${saved.id}).` : "Saved to backend successfully.",
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      setSaveState("error");
+      setSaveMessage(`Could not save character: ${message}`);
+    }
+  }
 
   const entries = [
     { label: "Race", value: character.race },
@@ -68,6 +118,22 @@ export function CharacterSummary() {
       <p className="table-selection">
         Choices are kept as you move between pages and are restored if you reload.
       </p>
+
+      <button
+        className="allocate-button"
+        type="button"
+        onClick={saveCharacter}
+        // Prevent duplicate submissions and invalid payloads.
+        disabled={!canSave || saveState === "saving"}
+      >
+        {saveState === "saving" ? "Saving..." : "Save to backend"}
+      </button>
+
+      {saveMessage && (
+        <p className="table-selection" role={saveState === "error" ? "alert" : "status"}>
+          {saveMessage}
+        </p>
+      )}
 
       <button className="allocate-button" type="button" onClick={resetCharacter}>
         Start over

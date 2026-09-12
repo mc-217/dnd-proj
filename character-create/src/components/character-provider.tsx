@@ -81,14 +81,13 @@ function writeDraft(next: CharacterDraft) {
 
 type CharacterContextValue = {
   character: CharacterDraft;
-  // Partial means you pass only the fields you're changing, e.g. { race: "Elf" }.
+  // Partial =>> only pass the fields you're changing, e.g. { race: "Elf" }.
   updateCharacter: (changes: Partial<CharacterDraft>) => void;
   resetCharacter: () => void;
 };
 
 // Context is React's way to hand a value to deeply nested components without
-// threading it through every layer as props. It starts as null so the hook below
-// can detect the mistake of using it outside the provider.
+// threading it through every layer as props. It starts as null 
 const CharacterContext = createContext<CharacterContextValue | null>(null);
 
 export function CharacterProvider({ children }: { children: React.ReactNode }) {
