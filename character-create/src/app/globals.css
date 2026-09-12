@@ -1,3 +1,9 @@
+/* Tailwind v4. One line replaces the old three @tailwind directives, and there
+   is no tailwind.config.js any more — the theme is configured in CSS, in the
+   @theme block further down. Must stay at the very top: CSS requires @import
+   before any other rule. */
+@import "tailwindcss";
+
 /* ===========================================================================
    THE WHOLE IDEA BEHIND THIS FILE
 
@@ -30,25 +36,80 @@
    nobody had a box of crayons to reach for.
 --------------------------------------------------------------------------- */
 
-:root {
-  --ink: #1a1613;         /* near-black brown: all borders, all headings */
-  --ink-soft: #5d564c;    /* faded ink: secondary text, descriptions */
-  --hairline: #b9ad97;    /* the thin light rules INSIDE a box */
-  --paper: #f6f1e4;       /* the sheet itself */
-  --paper-shade: #ebe3d1; /* one shade darker: the desk, table stripes */
-  --paper-deep: #e0d6bd;  /* two shades darker: hover + selected rows */
-  --accent: #7a1f16;      /* oxblood red. Used sparingly, like a red pen. */
+/* `@theme` is Tailwind v4's config, written in CSS instead of a JS file.
+   It does two jobs at once:
+     1. declares these as real CSS variables you can `var()` anywhere, and
+     2. GENERATES matching utility classes.
 
-  /* Font stacks. `--font-display` etc. are NOT defined here — they are
-     injected by next/font in layout.tsx. We wrap them with a fallback so
-     text still renders if the font file hasn't downloaded yet. */
-  --display: var(--font-display), "Times New Roman", serif;  /* Cinzel */
-  --label: var(--font-label), "Trebuchet MS", sans-serif;    /* Alegreya Sans SC */
-  --body: var(--font-body), serif;                           /* EB Garamond */
+   The prefix decides which utilities you get. `--color-ink` produces
+   `bg-ink`, `text-ink`, `border-ink`; `--font-label` produces `font-label`;
+   `--container-sheet` produces `max-w-sheet`. So this block is the one place
+   where the design system and Tailwind agree on what the colors are — write
+   `bg-paper` in JSX and you get exactly the same cream as the CSS below. */
+@theme {
+  --color-ink: #1a1613;         /* near-black brown: all borders, all headings */
+  --color-ink-soft: #5d564c;    /* faded ink: secondary text, descriptions */
+  --color-hairline: #b9ad97;    /* the thin light rules INSIDE a box */
+  --color-paper: #f6f1e4;       /* the sheet itself */
+  --color-paper-shade: #ebe3d1; /* one shade darker: the desk, table stripes */
+  --color-paper-deep: #e0d6bd;  /* two shades darker: hover + selected rows */
+  --color-accent: #7a1f16;      /* oxblood red. Used sparingly, like a red pen. */
+
+  /* Role names (display/label/body) mapped onto the actual typefaces, which
+     next/font injects in layout.tsx as --font-cinzel etc. The typeface vars are
+     deliberately named differently so they can't collide with these — see the
+     comment in layout.tsx. Trailing families are the fallback while the font
+     file downloads. */
+  --font-display: var(--font-cinzel), "Times New Roman", serif;
+  --font-label: var(--font-alegreya), "Trebuchet MS", sans-serif;
+  --font-body: var(--font-garamond), serif;
 
   /* How wide the "sheet of paper" is allowed to get on a huge monitor. */
-  --sheet: 1120px;
+  --container-sheet: 1120px;
 }
+
+/* Short aliases, so the ~800 lines below can say var(--ink) instead of
+   var(--color-ink). The values live in @theme above; nothing is duplicated
+   here, these just point at it. */
+:root {
+  --ink: var(--color-ink);
+  --ink-soft: var(--color-ink-soft);
+  --hairline: var(--color-hairline);
+  --paper: var(--color-paper);
+  --paper-shade: var(--color-paper-shade);
+  --paper-deep: var(--color-paper-deep);
+  --accent: var(--color-accent);
+
+  --display: var(--font-display);
+  --label: var(--font-label);
+  --body: var(--font-body);
+
+  --sheet: var(--container-sheet);
+}
+
+/* ---------------------------------------------------------------------------
+   HOW THESE TWO SYSTEMS SHARE THE PAGE
+   ---------------------------------------------------------------------------
+   Tailwind puts everything it generates inside CSS @layers (theme, base,
+   components, utilities). Everything in THIS file is unlayered.
+
+   The rule you need to know: unlayered CSS always beats layered CSS, no matter
+   what order it appears in or how specific the selectors are. Two consequences:
+
+   GOOD: Tailwind's Preflight reset (in @layer base) cannot clobber the sheet
+   design. The styles below win automatically, which is why adding Tailwind
+   changed nothing visually.
+
+   WATCH OUT: it also means a utility loses to a semantic class when they set
+   the same property. `<article className="ability-card p-8">` will NOT get 8
+   units of padding, because `.ability-card` already sets padding down below.
+   Utilities work fine on elements that have no semantic class, and for any
+   property the semantic class doesn't touch.
+
+   If you later want utilities to win, wrap the sheet styles in
+   `@layer components { ... }` — but then you'd need to double-check Preflight
+   isn't undoing anything, so it isn't free.
+--------------------------------------------------------------------------- */
 
 
 /* ---------------------------------------------------------------------------

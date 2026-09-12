@@ -13,14 +13,20 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
     await app.init();
   });
 
   it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+    return request(app.getHttpServer()).get('/api').expect(200).expect({
+      name: 'dnd-proj-backend',
+      status: 'ok',
+      docs: 'Add your API docs route here (e.g. /api/docs).',
+    });
+  });
+
+  it('/health (GET)', () => {
+    return request(app.getHttpServer()).get('/api/health').expect(200);
   });
 
   afterEach(async () => {

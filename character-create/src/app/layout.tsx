@@ -4,22 +4,28 @@ import { CharacterProvider } from "@/components/character-provider";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
+// These are named after the typeface rather than its role (--font-cinzel, not
+// --font-display) on purpose. Tailwind's @theme owns the --font-* role names to
+// generate its font utilities, and next/font sets these on a class on <html>,
+// which is the same element as :root. Sharing a name would make the winner
+// depend on stylesheet order. globals.css maps typeface -> role in one place.
+
 // Headings. Inscriptional roman caps, standing in for the printed sheet's
 // Modesto display face.
 const cinzel = Cinzel({
-  variable: "--font-display",
+  variable: "--font-cinzel",
   subsets: ["latin"],
 });
 
 // The small letterspaced caps used for every printed field label.
 const alegreyaSansSC = Alegreya_Sans_SC({
-  variable: "--font-label",
+  variable: "--font-alegreya",
   subsets: ["latin"],
   weight: ["400", "500", "700"],
 });
 
 const ebGaramond = EB_Garamond({
-  variable: "--font-body",
+  variable: "--font-garamond",
   subsets: ["latin"],
 });
 

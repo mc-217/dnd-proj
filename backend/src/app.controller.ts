@@ -5,8 +5,10 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  // Root API endpoint used for quick service metadata checks.
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getInfo() {
+    // Delegates response shaping to the service layer.
+    return this.appService.getInfo();
   }
 }

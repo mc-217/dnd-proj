@@ -18,27 +18,30 @@ const features = tableFeatures({
 
 type Background = {
   name: string;
+  languages: number;
   skills: string;
   feature: string;
 };
 
 const backgrounds: Background[] = [
-  { name: "Acolyte", skills: "Insight, Religion", feature: "Shelter of the Faithful" },
-  { name: "Charlatan", skills: "Deception, Sleight of Hand", feature: "False Identity" },
-  { name: "Criminal", skills: "Deception, Stealth", feature: "Criminal Contact" },
-  { name: "Folk Hero", skills: "Animal Handling, Survival", feature: "Rustic Hospitality" },
-  { name: "Noble", skills: "History, Persuasion", feature: "Position of Privilege" },
-  { name: "Sage", skills: "Arcana, History", feature: "Researcher" },
-  { name: "Soldier", skills: "Athletics, Intimidation", feature: "Military Rank" },
-  { name: "Urchin", skills: "Sleight of Hand, Stealth", feature: "City Secrets" },
+  { name: "Acolyte",languages: +2, skills: "Insight, Religion", feature: "Shelter of the Faithful" },
+  { name: "Charlatan",languages: +2, skills: "Deception, Sleight of Hand", feature: "False Identity" },
+  { name: "Criminal", languages: +0, skills: "Deception, Stealth", feature: "Criminal Contact" },
+  { name: "Folk Hero", languages: +0, skills: "Animal Handling, Survival", feature: "Rustic Hospitality" },
+  { name: "Noble", languages: +1, skills: "History, Persuasion", feature: "Position of Privilege" },
+  { name: "Sage", languages: +2, skills: "Arcana, History", feature: "Researcher" },
+  { name: "Soldier",languages: +0, skills: "Athletics, Intimidation", feature: "Military Rank" },
+  { name: "Urchin", languages: +0, skills: "Sleight of Hand, Stealth", feature: "City Secrets" },
 ];
 
 const columnHelper = createColumnHelper<typeof features, Background>();
 
 const columns = columnHelper.columns([
   columnHelper.accessor("name", { header: "Background" }),
+  columnHelper.accessor("languages", { header: "Languages" }),  
   columnHelper.accessor("skills", { header: "Skill Proficiencies" }),
   columnHelper.accessor("feature", { header: "Feature" }),
+  
 ]);
 
 export function BackgroundTable() {
