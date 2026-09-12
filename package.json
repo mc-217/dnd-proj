@@ -1,0 +1,17 @@
+{
+  "name": "dnd-proj",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Runs the backend and frontend together for local development.",
+  "packageManager": "pnpm@11.22.0",
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"pnpm run dev:api\" \"pnpm run dev:web\"",
+    "dev:api": "pnpm --dir backend start:dev",
+    "dev:web": "PORT=3001 pnpm --dir character-create dev",
+    "build": "pnpm --dir backend build && pnpm --dir character-create build",
+    "test": "pnpm --dir backend test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
