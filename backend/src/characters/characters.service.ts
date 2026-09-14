@@ -11,8 +11,64 @@ interface CharacterRow {
   race: string;
   class: Character['class'];
   level: number | null;
+  subrace: string | null;
+  multiclass: string | null;
+  hitdice: number | null;
+  strength: number | null;
+  strmod: number | null;
+  dexterity: number | null;
+  dexmod: number | null;
+  constitution: number | null;
+  consmod: number | null;
+  intelligence: number | null;
+  intmod: number | null;
+  wisdom: number | null;
+  wismod: number | null;
+  charisma: number | null;
+  charmod: number | null;
+  hp: number | null;
+  s_throws: string | null;
+  wep_proficiency: string | null;
+  s_proficiency: string | null;
+  t_proficiency: string | null;
   background: string | null;
+  languages: string | null;
+  personality: string | null;
+  ideal: string | null;
+  bond: string | null;
+  flaw: string | null;
+  equipment: string | null;
 }
+
+// Postgres folds unquoted identifiers to lower case, so `hitDice` in schema.sql
+// is really the column `hitdice`. PostgREST matches payload keys to column names
+// exactly, so the API-facing names have to be translated before any write.
+const COLUMN_BY_FIELD: Record<string, string> = {
+  name: 'name',
+  race: 'race',
+  class: 'class',
+  subrace: 'subrace',
+  multiclass: 'multiclass',
+  hitDice: 'hitdice',
+  level: 'level',
+  strength: 'strength',
+  dexterity: 'dexterity',
+  constitution: 'constitution',
+  intelligence: 'intelligence',
+  wisdom: 'wisdom',
+  charisma: 'charisma',
+  s_throws: 's_throws',
+  wep_proficiency: 'wep_proficiency',
+  s_proficiency: 's_proficiency',
+  t_proficiency: 't_proficiency',
+  background: 'background',
+  languages: 'languages',
+  personality: 'personality',
+  ideal: 'ideal',
+  bond: 'bond',
+  flaw: 'flaw',
+  equipment: 'equipment',
+};
 
 @Injectable()
 export class CharactersService {
@@ -22,11 +78,8 @@ export class CharactersService {
   async create(dto: CreateCharacterDto): Promise<Character> {
     if (this.supabaseService.isConfigured()) {
       const inserted = await this.supabaseService.insertOne<CharacterRow>({
-        name: dto.name,
-        race: dto.race,
-        class: dto.class,
+        ...this.toRow(dto),
         level: dto.level ?? 1,
-        background: dto.background ?? null,
       });
 
       if (!inserted) {
@@ -37,12 +90,9 @@ export class CharactersService {
     }
 
     const character: Character = {
+      ...dto,
       id: randomUUID(),
-      name: dto.name,
-      race: dto.race,
-      class: dto.class,
       level: dto.level ?? 1,
-      background: dto.background,
     };
 
     this.characters.push(character);
@@ -78,10 +128,7 @@ export class CharactersService {
     if (this.supabaseService.isConfigured()) {
       const updated = await this.supabaseService.updateOneById<CharacterRow>(
         id,
-        {
-          ...dto,
-          background: dto.background ?? undefined,
-        },
+        this.toRow(dto),
       );
 
       if (!updated) {
@@ -121,6 +168,21 @@ export class CharactersService {
     this.characters.splice(index, 1);
   }
 
+  // Only fields the caller actually supplied are included, so a PATCH never
+  // blanks a column the client left out.
+  private toRow(dto: CreateCharacterDto | UpdateCharacterDto): object {
+    const row: Record<string, unknown> = {};
+    const values = dto as Record<string, unknown>;
+
+    for (const [field, column] of Object.entries(COLUMN_BY_FIELD)) {
+      if (values[field] !== undefined) {
+        row[column] = values[field];
+      }
+    }
+
+    return row;
+  }
+
   private mapRow(row: CharacterRow): Character {
     return {
       id: row.id,
@@ -128,7 +190,33 @@ export class CharactersService {
       race: row.race,
       class: row.class,
       level: row.level ?? 1,
+      subrace: row.subrace ?? undefined,
+      multiclass: row.multiclass ?? undefined,
+      hitDice: row.hitdice ?? undefined,
+      strength: row.strength ?? undefined,
+      strMod: row.strmod ?? undefined,
+      dexterity: row.dexterity ?? undefined,
+      dexMod: row.dexmod ?? undefined,
+      constitution: row.constitution ?? undefined,
+      consMod: row.consmod ?? undefined,
+      intelligence: row.intelligence ?? undefined,
+      intMod: row.intmod ?? undefined,
+      wisdom: row.wisdom ?? undefined,
+      wisMod: row.wismod ?? undefined,
+      charisma: row.charisma ?? undefined,
+      charMod: row.charmod ?? undefined,
+      hp: row.hp ?? undefined,
+      s_throws: row.s_throws ?? undefined,
+      wep_proficiency: row.wep_proficiency ?? undefined,
+      s_proficiency: row.s_proficiency ?? undefined,
+      t_proficiency: row.t_proficiency ?? undefined,
       background: row.background ?? undefined,
+      languages: row.languages ?? undefined,
+      personality: row.personality ?? undefined,
+      ideal: row.ideal ?? undefined,
+      bond: row.bond ?? undefined,
+      flaw: row.flaw ?? undefined,
+      equipment: row.equipment ?? undefined,
     };
   }
 }

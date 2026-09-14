@@ -5,6 +5,14 @@
 import { useState } from "react";
 import { useCharacter } from "@/components/character-provider";
 
+// Unchosen fields are dropped rather than sent as null, so the database keeps
+// its own defaults (level, for one) instead of being overwritten with nothing.
+function filledFields(values: Record<string, string | number | null>) {
+  return Object.fromEntries(
+    Object.entries(values).filter(([, value]) => value !== null),
+  );
+}
+
 export function CharacterSummary() {
   const { character, resetCharacter } = useCharacter();
   const [saveState, setSaveState] = useState<"idle" | "saving" | "success" | "error">("idle");
@@ -36,7 +44,29 @@ export function CharacterSummary() {
           race: character.race,
           // Backend expects lowercase class values (e.g. "wizard").
           class: character.characterClass.toLowerCase(),
-          background: character.background ?? undefined,
+          ...filledFields({
+            subrace: character.subrace,
+            multiclass: character.multiclass,
+            level: character.level,
+            hitDice: character.hitDice,
+            strength: character.strength,
+            dexterity: character.dexterity,
+            constitution: character.constitution,
+            intelligence: character.intelligence,
+            wisdom: character.wisdom,
+            charisma: character.charisma,
+            s_throws: character.s_throws,
+            wep_proficiency: character.wep_proficiency,
+            s_proficiency: character.s_proficiency,
+            t_proficiency: character.t_proficiency,
+            background: character.background,
+            languages: character.languages,
+            personality: character.personality,
+            ideal: character.ideal,
+            bond: character.bond,
+            flaw: character.flaw,
+            equipment: character.equipment,
+          }),
         }),
       });
 
@@ -61,10 +91,30 @@ export function CharacterSummary() {
     { label: "Race", value: character.race },
     { label: "Subrace", value: character.subrace },
     { label: "Class", value: character.characterClass },
+    { label: "Multiclass", value: character.multiclass },
+    { label: "Level", value: character.level },
+    { label: "Hit Dice", value: character.hitDice },
     { label: "Background", value: character.background },
+    { label: "Languages", value: character.languages },
+    { label: "Saving Throws", value: character.s_throws },
+    { label: "Weapon Proficiency", value: character.wep_proficiency },
+    { label: "Skill Proficiency", value: character.s_proficiency },
+    { label: "Tool Proficiency", value: character.t_proficiency },
+    { label: "Personality", value: character.personality },
+    { label: "Ideal", value: character.ideal },
+    { label: "Bond", value: character.bond },
+    { label: "Flaw", value: character.flaw },
+    { label: "Equipment", value: character.equipment },
   ];
 
-  const scores = character.abilityScores;
+  const scores = [
+    { label: "STR", value: character.strength },
+    { label: "DEX", value: character.dexterity },
+    { label: "CON", value: character.constitution },
+    { label: "INT", value: character.intelligence },
+    { label: "WIS", value: character.wisdom },
+    { label: "CHA", value: character.charisma },
+  ].filter((entry): entry is { label: string; value: number } => entry.value !== null);
 
   return (
     <>
@@ -87,7 +137,7 @@ export function CharacterSummary() {
       </table>
 
       {/* Only render the scores table once something has been allocated. */}
-      {scores && (
+      {scores.length > 0 && (
         <table className="sheet-table">
           <thead>
             <tr>
@@ -97,13 +147,13 @@ export function CharacterSummary() {
             </tr>
           </thead>
           <tbody>
-            {Object.entries(scores).map(([ability, score]) => {
-              const modifier = Math.floor((score - 10) / 2);
+            {scores.map(({ label, value }) => {
+              const modifier = Math.floor((value - 10) / 2);
 
               return (
-                <tr key={ability}>
-                  <td>{ability}</td>
-                  <td>{score}</td>
+                <tr key={label}>
+                  <td>{label}</td>
+                  <td>{value}</td>
                   <td>
                     {modifier >= 0 ? "+" : ""}
                     {modifier}

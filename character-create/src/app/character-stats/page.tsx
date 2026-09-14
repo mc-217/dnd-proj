@@ -1,20 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { useCharacter } from "@/components/character-provider";
+import { useCharacter, type CharacterDraft } from "@/components/character-provider";
 
-const abilities = [
-  { name: "Strength", abbreviation: "STR", description: "How hard can you crush a tomato?" },
-  { name: "Dexterity", abbreviation: "DEX", description: "How well can you dodge a tomato thrown at you?" },
-  { name: "Constitution", abbreviation: "CON", description: "How sick will you get after eating a rotten tomato?" },
-  { name: "Intelligence", abbreviation: "INT", description: "Do you know that a tomato is a fruit?" },
-  { name: "Wisdom", abbreviation: "WIS", description: "Do you know not to put a tomato in a fruit salad?" },
-  { name: "Charisma", abbreviation: "CHA", description: "Can you sell someone a tomato fruit salad?" },
+// `field` is the draft key each score is stored under, matching the column name
+// the backend expects.
+type AbilityField =
+  | "strength"
+  | "dexterity"
+  | "constitution"
+  | "intelligence"
+  | "wisdom"
+  | "charisma";
+
+const abilities: {
+  field: AbilityField;
+  name: string;
+  abbreviation: string;
+  description: string;
+}[] = [
+  { field: "strength", name: "Strength", abbreviation: "STR", description: "How hard can you crush a tomato?" },
+  { field: "dexterity", name: "Dexterity", abbreviation: "DEX", description: "How well can you dodge a tomato thrown at you?" },
+  { field: "constitution", name: "Constitution", abbreviation: "CON", description: "How sick will you get after eating a rotten tomato?" },
+  { field: "intelligence", name: "Intelligence", abbreviation: "INT", description: "Do you know that a tomato is a fruit?" },
+  { field: "wisdom", name: "Wisdom", abbreviation: "WIS", description: "Do you know not to put a tomato in a fruit salad?" },
+  { field: "charisma", name: "Charisma", abbreviation: "CHA", description: "Can you sell someone a tomato fruit salad?" },
 ];
 
-const initialValues = Object.fromEntries(
-  abilities.map(({ abbreviation }) => [abbreviation, 10]),
-);
+const DEFAULT_SCORE = 10;
 
 export default function CharacterStats() {
   // The pending roll is throwaway, so it stays local. The allocated scores are
@@ -22,7 +35,6 @@ export default function CharacterStats() {
   // navigating away from this page.
   const [statRoll, setStatRoll] = useState<number | null>(null);
   const { character, updateCharacter } = useCharacter();
-  const scores = character.abilityScores ?? initialValues;
 
   function rollStat() {
     const rolls = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
@@ -30,9 +42,10 @@ export default function CharacterStats() {
     setStatRoll(rolls.slice(1).reduce((total, roll) => total + roll, 0));
   }
 
-  function allocateRoll(ability: string) {
+  function allocateRoll(field: AbilityField) {
     if (statRoll === null) return;
-    updateCharacter({ abilityScores: { ...scores, [ability]: statRoll } });
+    const change = { [field]: statRoll } as Partial<CharacterDraft>;
+    updateCharacter(change);
     setStatRoll(null);
   }
 
@@ -59,7 +72,8 @@ export default function CharacterStats() {
 
       <section className="ability-grid" aria-label="Ability scores">
         {abilities.map((ability) => {
-          const modifier = Math.floor((scores[ability.abbreviation] - 10) / 2);
+          const score = character[ability.field] ?? DEFAULT_SCORE;
+          const modifier = Math.floor((score - 10) / 2);
 
           return (
             <article className="ability" key={ability.abbreviation}>
@@ -70,7 +84,7 @@ export default function CharacterStats() {
                   type="number"
                   min="3"
                   max="20"
-                  value={scores[ability.abbreviation]}
+                  value={score}
                   readOnly
                 />
                 <span className="modifier">
@@ -86,7 +100,7 @@ export default function CharacterStats() {
               <button
                 className="allocate-button"
                 type="button"
-                onClick={() => allocateRoll(ability.abbreviation)}
+                onClick={() => allocateRoll(ability.field)}
                 disabled={statRoll === null}
               >
                 Allocate roll
