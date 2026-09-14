@@ -39,15 +39,48 @@
 -- characters: backs the API in backend/src/characters.
 
 create table if not exists public.characters (
-  id         uuid primary key default gen_random_uuid(),
-  name       text not null,
-  race       text not null,
-  class      text not null,
-  level      integer not null default 1,
-  background text,
+  id           uuid primary key default gen_random_uuid(),
+  name         text not null,
+  race         text not null,
+  subrace      text,
+  class        text not null,
+  multiclass   text,
+  hitDice      int,
+  s_throws     text, 
+  wep_proficiency text,
+  level        integer not null default 1,
+  strength     integer,
+  strMod       integer generated always as (floor((strength - 10) / 2.0)::integer) stored,
+  dexterity    integer,
+  dexMod       integer generated always as (floor((dexterity - 10) / 2.0)::integer) stored,
+  constitution integer,
+  consMod      integer generated always as (floor((constitution - 10) / 2.0)::integer) stored,
+  intelligence integer,
+  intMod       integer generated always as (floor((intelligence - 10) / 2.0)::integer) stored,
+  wisdom       integer,
+  wisMod       integer generated always as (floor((wisdom - 10) / 2.0)::integer) stored,
+  charisma     integer,
+  charMod      integer generated always as (floor((charisma - 10) / 2.0)::integer) stored,
+  background   text, 
+  languages    text,
+  personality  text, 
+  ideal        text, 
+  bond         text, 
+  flaw         text, 
+  s_proficiency text, 
+  t_proficiency text,
+  equipment    text, 
+  hp           integer generated always as ((hitDice + floor((constitution - 10) / 2.0))::integer) stored,
+
   -- SupabaseService.selectAll() orders by this column; queries fail without it.
-  created_at timestamptz not null default now()
+  created_at   timestamptz not null default now()
 );
+
+-- Adding a column later: `create table if not exists` is skipped on a database
+-- that already has the table, so a new column needs its own
+-- `alter table public.characters add column if not exists ...` here as well as
+-- in the block above. Dropping and recreating the table works too, and loses
+-- every row.
 
 -- Mirrors the CharacterClass union in entities/character.entity.ts.
 alter table public.characters

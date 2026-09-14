@@ -69,7 +69,13 @@ export function ClassTable() {
           ))}
         </thead>
         <tbody>
+          
           {table.getRowModel().rows.map((row) => {
+            // START HERE NEXT — choosing a class only saves the name, but the row
+            // already holds hitDie and savingThrows, which map to the hitDice and
+            // s_throws columns. Saving those here is what makes the generated hp
+            // column compute; it stays null while hitDice is unset. Note hitDie is
+            // a string ("d12") and the column is an int, so it needs parsing.
             const isSelected = row.original.name === character.characterClass;
             const choose = () => updateCharacter({ characterClass: row.original.name });
 

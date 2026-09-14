@@ -12,16 +12,52 @@ export type CharacterDraft = {
   race: string | null;
   subrace: string | null;
   characterClass: string | null;
+  multiclass: string | null;
+  level: number | null;
+  hitDice: number | null;
+  strength: number | null;
+  dexterity: number | null;
+  constitution: number | null;
+  intelligence: number | null;
+  wisdom: number | null;
+  charisma: number | null;
+  s_throws: string | null;
+  wep_proficiency: string | null;
+  s_proficiency: string | null;
+  t_proficiency: string | null;
   background: string | null;
-  abilityScores: Record<string, number> | null;
+  languages: string | null;
+  personality: string | null;
+  ideal: string | null;
+  bond: string | null;
+  flaw: string | null;
+  equipment: string | null;
 };
 
 const emptyDraft: CharacterDraft = {
   race: null,
   subrace: null,
   characterClass: null,
+  multiclass: null,
+  level: null,
+  hitDice: null,
+  strength: null,
+  dexterity: null,
+  constitution: null,
+  intelligence: null,
+  wisdom: null,
+  charisma: null,
+  s_throws: null,
+  wep_proficiency: null,
+  s_proficiency: null,
+  t_proficiency: null,
   background: null,
-  abilityScores: null,
+  languages: null,
+  personality: null,
+  ideal: null,
+  bond: null,
+  flaw: null,
+  equipment: null,
 };
 
 const STORAGE_KEY = "dnd-character-draft";
