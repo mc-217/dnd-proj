@@ -4,7 +4,7 @@ import { CreationStepPage } from "@/components/creation-step-page";
 export default function CharacterSheetPage() {
   return (
     <CreationStepPage
-      step={5}
+      step={6}
       title="Final Character Sheet"
       description="Everything chosen so far, collected in one place."
     >

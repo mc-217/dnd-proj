@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCharacter, type CharacterDraft } from "@/components/character-provider";
+import { TOTAL_STEPS } from "@/components/creation-step-page";
 
 // `field` is the draft key each score is stored under, matching the column name
 // the backend expects.
@@ -52,7 +53,7 @@ export default function CharacterStats() {
   return (
     <main className="character-builder">
       <header className="page-header">
-        <p className="eyebrow">Step 3 of 5</p>
+        <p className="eyebrow">Step 3 of {TOTAL_STEPS}</p>
         <div className="heading-row">
           <div>
             <h1>Ability Scores</h1>

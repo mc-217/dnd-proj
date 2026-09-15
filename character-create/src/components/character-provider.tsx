@@ -7,7 +7,7 @@
 import { createContext, useContext, useSyncExternalStore } from "react";
 
 // One place that defines everything a character-in-progress can hold.
-// null means "not chosen yet".
+// null means "not chosen yet", with level the one field that starts filled in.
 export type CharacterDraft = {
   race: string | null;
   subrace: string | null;
@@ -23,6 +23,7 @@ export type CharacterDraft = {
   charisma: number | null;
   s_throws: string | null;
   wep_proficiency: string | null;
+  armor_proficiency: string | null;
   s_proficiency: string | null;
   t_proficiency: string | null;
   background: string | null;
@@ -39,7 +40,8 @@ const emptyDraft: CharacterDraft = {
   subrace: null,
   characterClass: null,
   multiclass: null,
-  level: null,
+  // Every character starts at 1; the other fields have no sensible default.
+  level: 1,
   hitDice: null,
   strength: null,
   dexterity: null,
@@ -49,6 +51,7 @@ const emptyDraft: CharacterDraft = {
   charisma: null,
   s_throws: null,
   wep_proficiency: null,
+  armor_proficiency: null,
   s_proficiency: null,
   t_proficiency: null,
   background: null,
@@ -85,6 +88,19 @@ function subscribe(onChange: () => void) {
 let cachedRaw: string | null = null;
 let cachedDraft: CharacterDraft = emptyDraft;
 
+// Spreading over emptyDraft fills in any field added since the draft was saved.
+// Stored nulls are dropped first: a draft written before level gained its
+// default still holds "level": null, and that would overwrite the 1 and leave
+// the sheet showing a dash. Dropping them changes nothing for the other fields,
+// whose default is null anyway.
+function restore(stored: Record<string, unknown>): CharacterDraft {
+  const chosen = Object.fromEntries(
+    Object.entries(stored).filter(([, value]) => value !== null),
+  );
+
+  return { ...emptyDraft, ...chosen } as CharacterDraft;
+}
+
 function getSnapshot(): CharacterDraft {
   const raw = window.localStorage.getItem(STORAGE_KEY);
 
@@ -92,8 +108,7 @@ function getSnapshot(): CharacterDraft {
     cachedRaw = raw;
 
     try {
-      // Spreading over emptyDraft fills in any field added since it was saved.
-      cachedDraft = raw ? { ...emptyDraft, ...JSON.parse(raw) } : emptyDraft;
+      cachedDraft = raw ? restore(JSON.parse(raw)) : emptyDraft;
     } catch {
       cachedDraft = emptyDraft;
     }

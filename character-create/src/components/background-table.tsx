@@ -16,14 +16,16 @@ const features = tableFeatures({
   sortFns,
 });
 
-type Background = {
+export type Background = {
   name: string;
   languages: number;
   skills: string;
   feature: string;
 };
 
-const backgrounds: Background[] = [
+// Exported so the skills step can look up which two skills the chosen
+// background hands out.
+export const backgrounds: Background[] = [
   { name: "Acolyte",languages: +2, skills: "Insight, Religion", feature: "Shelter of the Faithful" },
   { name: "Charlatan",languages: +2, skills: "Deception, Sleight of Hand", feature: "False Identity" },
   { name: "Criminal", languages: +0, skills: "Deception, Stealth", feature: "Criminal Contact" },

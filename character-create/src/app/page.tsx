@@ -10,6 +10,11 @@ const creationSteps = [
     description: "Describe who your character is and where they came from.",
   },
   {
+    href: "/skills",
+    title: "Skills",
+    description: "Pick the skills your class and background make available.",
+  },
+  {
     href: "/character-sheet",
     title: "Final Character Sheet",
     description: "Review the completed character sheet.",

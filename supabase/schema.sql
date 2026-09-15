@@ -48,6 +48,7 @@ create table if not exists public.characters (
   hitDice      int,
   s_throws     text, 
   wep_proficiency text,
+  armor_proficiency varchar(50),
   level        integer not null default 1,
   strength     integer,
   strMod       integer generated always as (floor((strength - 10) / 2.0)::integer) stored,
@@ -81,6 +82,9 @@ create table if not exists public.characters (
 -- `alter table public.characters add column if not exists ...` here as well as
 -- in the block above. Dropping and recreating the table works too, and loses
 -- every row.
+
+alter table public.characters
+  add column if not exists armor_proficiency varchar(50);
 
 -- Mirrors the CharacterClass union in entities/character.entity.ts.
 alter table public.characters

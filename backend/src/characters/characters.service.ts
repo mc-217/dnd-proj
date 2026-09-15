@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { CreateCharacterDto } from './dto/create-character.dto';
 import { UpdateCharacterDto } from './dto/update-character.dto';
 import { Character } from './entities/character.entity';
-import { SupabaseService } from './supabase.service';
+import { SupabaseService } from '../supabase/supabase.service';
 
 interface CharacterRow {
   id: string;
@@ -29,6 +29,7 @@ interface CharacterRow {
   hp: number | null;
   s_throws: string | null;
   wep_proficiency: string | null;
+  armor_proficiency: string | null;
   s_proficiency: string | null;
   t_proficiency: string | null;
   background: string | null;
@@ -59,6 +60,7 @@ const COLUMN_BY_FIELD: Record<string, string> = {
   charisma: 'charisma',
   s_throws: 's_throws',
   wep_proficiency: 'wep_proficiency',
+  armor_proficiency: 'armor_proficiency',
   s_proficiency: 's_proficiency',
   t_proficiency: 't_proficiency',
   background: 'background',
@@ -73,14 +75,17 @@ const COLUMN_BY_FIELD: Record<string, string> = {
 @Injectable()
 export class CharactersService {
   private readonly characters: Character[] = [];
+  private readonly table =
+    process.env.SUPABASE_CHARACTERS_TABLE ?? 'characters';
+
   constructor(private readonly supabaseService: SupabaseService) {}
 
   async create(dto: CreateCharacterDto): Promise<Character> {
     if (this.supabaseService.isConfigured()) {
-      const inserted = await this.supabaseService.insertOne<CharacterRow>({
-        ...this.toRow(dto),
-        level: dto.level ?? 1,
-      });
+      const inserted = await this.supabaseService.insertOne<CharacterRow>(
+        this.table,
+        { ...this.toRow(dto), level: dto.level ?? 1 },
+      );
 
       if (!inserted) {
         throw new NotFoundException('Failed to insert character');
@@ -101,7 +106,9 @@ export class CharactersService {
 
   async findAll(): Promise<Character[]> {
     if (this.supabaseService.isConfigured()) {
-      const rows = await this.supabaseService.selectAll<CharacterRow>();
+      const rows = await this.supabaseService.selectAll<CharacterRow>(
+        this.table,
+      );
       return rows.map((row) => this.mapRow(row));
     }
 
@@ -110,7 +117,10 @@ export class CharactersService {
 
   async findOne(id: string): Promise<Character> {
     if (this.supabaseService.isConfigured()) {
-      const row = await this.supabaseService.selectOneById<CharacterRow>(id);
+      const row = await this.supabaseService.selectOneById<CharacterRow>(
+        this.table,
+        id,
+      );
       if (!row) {
         throw new NotFoundException(`Character ${id} not found`);
       }
@@ -127,6 +137,7 @@ export class CharactersService {
   async update(id: string, dto: UpdateCharacterDto): Promise<Character> {
     if (this.supabaseService.isConfigured()) {
       const updated = await this.supabaseService.updateOneById<CharacterRow>(
+        this.table,
         id,
         this.toRow(dto),
       );
@@ -152,12 +163,14 @@ export class CharactersService {
 
   async remove(id: string): Promise<void> {
     if (this.supabaseService.isConfigured()) {
-      const existing =
-        await this.supabaseService.selectOneById<CharacterRow>(id);
+      const existing = await this.supabaseService.selectOneById<CharacterRow>(
+        this.table,
+        id,
+      );
       if (!existing) {
         throw new NotFoundException(`Character ${id} not found`);
       }
-      await this.supabaseService.deleteOneById(id);
+      await this.supabaseService.deleteOneById(this.table, id);
       return;
     }
 
@@ -208,6 +221,7 @@ export class CharactersService {
       hp: row.hp ?? undefined,
       s_throws: row.s_throws ?? undefined,
       wep_proficiency: row.wep_proficiency ?? undefined,
+      armor_proficiency: row.armor_proficiency ?? undefined,
       s_proficiency: row.s_proficiency ?? undefined,
       t_proficiency: row.t_proficiency ?? undefined,
       background: row.background ?? undefined,
