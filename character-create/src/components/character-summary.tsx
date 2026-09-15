@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { useCharacter } from "@/components/character-provider";
+import { ChosenSkillsTable } from "@/components/chosen-skills-table";
 
 // Unchosen fields are dropped rather than sent as null, so the database keeps
 // its own defaults (level, for one) instead of being overwritten with nothing.
@@ -57,6 +58,7 @@ export function CharacterSummary() {
             charisma: character.charisma,
             s_throws: character.s_throws,
             wep_proficiency: character.wep_proficiency,
+            armor_proficiency: character.armor_proficiency,
             s_proficiency: character.s_proficiency,
             t_proficiency: character.t_proficiency,
             background: character.background,
@@ -98,6 +100,7 @@ export function CharacterSummary() {
     { label: "Languages", value: character.languages },
     { label: "Saving Throws", value: character.s_throws },
     { label: "Weapon Proficiency", value: character.wep_proficiency },
+    { label: "Armor Proficiency", value: character.armor_proficiency },
     { label: "Skill Proficiency", value: character.s_proficiency },
     { label: "Tool Proficiency", value: character.t_proficiency },
     { label: "Personality", value: character.personality },
@@ -164,6 +167,10 @@ export function CharacterSummary() {
           </tbody>
         </table>
       )}
+
+      {/* Sits here rather than in the page so it lands above the buttons, which
+          stay the last thing on the sheet. */}
+      <ChosenSkillsTable />
 
       <p className="table-selection">
         Choices are kept as you move between pages and are restored if you reload.

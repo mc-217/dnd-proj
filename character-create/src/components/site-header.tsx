@@ -5,7 +5,7 @@ const navigation = [
   { href: "/class", label: "Class" },
   { href: "/character-stats", label: "Character Stats" },
   { href: "/personality-background", label: "Personality & Background" },
-  { href: "/languages", label: "Languages" },
+  { href: "/skills", label: "Skills" },
   { href: "/character-sheet", label: "Final Character Sheet" },
 ];
 

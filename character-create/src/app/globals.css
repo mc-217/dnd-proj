@@ -806,6 +806,32 @@ h2 {
   content: "\25CF"; /* filled circle */
 }
 
+/* ===== Skills table row states ============================================
+   Two kinds of row on the skills step can't be clicked. A background's skills
+   are fixed, so they keep the filled bubble but lose the pointer cursor the
+   rule above hands to anything carrying `aria-selected`.
+
+   Skills outside the class list have no `aria-selected` at all, so they'd miss
+   the bubble entirely and their names would sit 1.5em left of every other row.
+   Giving them a faded hollow circle keeps the column aligned and reads as
+   "not available to you" rather than "available but unchosen".
+========================================================================== */
+.sheet-table tbody tr.is-granted {
+  cursor: default;
+}
+
+.sheet-table tbody tr.is-unavailable td {
+  color: var(--ink-soft);
+}
+
+.sheet-table tbody tr.is-unavailable td:first-child::before {
+  display: inline-block;
+  width: 1.5em;
+  color: var(--hairline);
+  content: "\25CB";
+  opacity: 0.45;
+}
+
 /* Subraces (Hill Dwarf under Dwarf) get indented to show the nesting. */
 .sheet-table tbody tr.is-subrace td:first-child {
   padding-left: 34px;

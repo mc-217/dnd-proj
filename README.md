@@ -41,5 +41,6 @@ pnpm dev
 | [`supabase/send2db.md`](supabase/send2db.md) | Writing and reading data through the API |
 | [`supabase/practice.md`](supabase/practice.md) | Exercises to extend the schema |
 | [`supabase/schema.sql`](supabase/schema.sql) | The database schema, applied by hand in the SQL Editor |
+| [`backend_get_info.md`](backend_get_info.md) | Adding read-only GET endpoints: the personalities module, the Supabase refactor it forced, and how it was verified |
 
 New here? Read them in that order.

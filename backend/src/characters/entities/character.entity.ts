@@ -39,6 +39,7 @@ export interface Character {
   hp?: number;
   s_throws?: string;
   wep_proficiency?: string;
+  armor_proficiency?: string;
   s_proficiency?: string;
   t_proficiency?: string;
   background?: string;
